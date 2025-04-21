@@ -1,86 +1,97 @@
-// Import necessary Payload modules and collections
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { buildConfig, PayloadRequest } from 'payload';
-import { postgresAdapter } from '@payloadcms/db-postgres';
-import sharp from 'sharp'; // sharp-import remains
+// storage-adapter-import-placeholder
+import { postgresAdapter } from '@payloadcms/db-postgres'
 
-// ===== CORRECTED CLOUD STORAGE IMPORTS =====
-import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'; // Named import for plugin
-import { s3Storage } from '@payloadcms/storage-s3';
- // Default import for adapter
-// ==================================================
+import sharp from 'sharp' // sharp-import
+import path from 'path'
+import { buildConfig, PayloadRequest } from 'payload'
+import { fileURLToPath } from 'url'
 
-// Your Collections and Globals
-import { Categories } from './collections/Categories';
-import { Media } from './collections/Media'; // Ensure Media is imported correctly
-import { Services } from './collections/Services';
-import { Testimonials } from './collections/Testimonials';
-import Portfolio from './collections/Portfolio';
-import { Pages } from './collections/Pages';
-import { Posts } from './collections/Posts';
-import { Users } from './collections/Users';
-import { Footer } from './Footer/config';
-import { Header } from './Header/config';
+import { Categories } from './collections/Categories'
+import { Media } from './collections/Media'
+import { Services } from './collections/Services'
+import { Testimonials } from './collections/Testimonials'
+import Portfolio from './collections/Portfolio'
+import { Pages } from './collections/Pages'
+import { Posts } from './collections/Posts'
+import { Users } from './collections/Users'
+import { Footer } from './Footer/config'
+import { Header } from './Header/config'
+import { plugins } from './plugins'
+import { defaultLexical } from '@/fields/defaultLexical'
+import { getServerSideURL } from './utilities/getURL'
 
-// Your other imports and utilities
-import { plugins as otherPluginsFromExternalFile } from './plugins'; // Renamed variable
-import { defaultLexical } from '@/fields/defaultLexical';
-import { getServerSideURL } from './utilities/getURL';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
-
-// ===== CONFIGURE S3 STORAGE FOR SUPABASE =====
-const s3Config = {
-  endpoint: `https://${process.env.SUPABASE_PROJECT_REF}.supabase.co/storage/v1`,
-  credentials: {
-    accessKeyId: process.env.SUPABASE_ACCESS_KEY_ID || 'service_role',
-    secretAccessKey: process.env.SUPABASE_SECRET_ACCESS_KEY || '',
-  },
-  region: process.env.SUPABASE_REGION || '',
-};
-// ============================================
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
     components: {
+      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
+      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
       beforeLogin: ['@/components/BeforeLogin'],
+      // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
+      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
       beforeDashboard: ['@/components/BeforeDashboard'],
     },
     importMap: {
       baseDir: path.resolve(dirname),
     },
     user: Users.slug,
-    livePreview: { /* ... */ },
+    livePreview: {
+      breakpoints: [
+        {
+          label: 'Mobile',
+          name: 'mobile',
+          width: 375,
+          height: 667,
+        },
+        {
+          label: 'Tablet',
+          name: 'tablet',
+          width: 768,
+          height: 1024,
+        },
+        {
+          label: 'Desktop',
+          name: 'desktop',
+          width: 1440,
+          height: 900,
+        },
+      ],
+    },
   },
+  // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI, // Ensure this environment variable is set
+      connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Services, Testimonials, Portfolio],
+  collections: [Pages, Posts, Media, Categories, Users , Services, Testimonials, Portfolio],
   cors: [getServerSideURL(), 'http://localhost:3000'].filter(Boolean),
   globals: [Header, Footer],
   plugins: [
-    // Include your other plugins
-    ...otherPluginsFromExternalFile, // Use the renamed variable
-
-    // ===== ADD THE S3 STORAGE PLUGIN =====
-    s3Storage({
-      collections: {
-        [Media.slug]: true,
-      },
-      config: s3Config,
-      bucket: process.env.SUPABASE_BUCKET || '',
-    }),
-    // ============================================================
+    ...plugins,
+    // storage-adapter-placeholder
   ],
   secret: process.env.PAYLOAD_SECRET,
   sharp,
-  typescript: { /* ... */ },
+  typescript: {
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  },
   jobs: {
+    access: {
+      run: ({ req }: { req: PayloadRequest }): boolean => {
+        // Allow logged in users to execute this endpoint (default)
+        if (req.user) return true
+
+        // If there is no logged in user, then check
+        // for the Vercel Cron secret to be present as an
+        // Authorization header:
+        const authHeader = req.headers.get('authorization')
+        return authHeader === `Bearer ${process.env.CRON_SECRET}`
+      },
+    },
     tasks: [],
   },
-});
+})
