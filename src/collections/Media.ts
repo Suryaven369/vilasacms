@@ -12,7 +12,23 @@ import { authenticated } from '../access/authenticated';
 const adapter = s3Storage({
   config: {
     endpoint: `https://${process.env.SUPABASE_PROJECT_REF}.supabase.co/storage/v1`,
-    credentials: {
+    credentials: {import type { CollectionConfig } from 'payload'
+
+export const Media: CollectionConfig = {
+  slug: 'media',
+  access: {
+    read: () => true,
+  },
+  fields: [
+    {
+      name: 'alt',
+      type: 'text',
+      required: true,
+    },
+  ],
+  upload: true,
+}
+
       accessKeyId: process.env.SUPABASE_ACCESS_KEY_ID || 'service_role',
       secretAccessKey: process.env.SUPABASE_SECRET_ACCESS_KEY || ''
     },
