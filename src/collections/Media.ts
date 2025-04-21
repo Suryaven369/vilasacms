@@ -1,80 +1,47 @@
-import type { CollectionConfig } from 'payload'
- 
- import {
-   FixedToolbarFeature,
-   InlineToolbarFeature,
-   lexicalEditor,
- } from '@payloadcms/richtext-lexical'
- import path from 'path'
- import { fileURLToPath } from 'url'
- 
- import { anyone } from '../access/anyone'
- import { authenticated } from '../access/authenticated'
- 
- const filename = fileURLToPath(import.meta.url)
- const dirname = path.dirname(filename)
- 
- export const Media: CollectionConfig = {
-   slug: 'media',
-   access: {
-     create: authenticated,
-     delete: authenticated,
-     read: anyone,
-     update: authenticated,
-   },
-   fields: [
-     {
-       name: 'alt',
-       type: 'text',
-       //required: true,
-     },
-     {
-       name: 'caption',
-       type: 'richText',
-       editor: lexicalEditor({
-         features: ({ rootFeatures }) => {
-           return [...rootFeatures, FixedToolbarFeature(), InlineToolbarFeature()]
-         },
-       }),
-     },
-   ],
-   upload: {
-     // Upload to the public/media directory in Next.js making them publicly accessible even outside of Payload
-     staticDir: path.resolve(dirname, '../../public/media'),
-     adminThumbnail: 'thumbnail',
-     focalPoint: true,
-     imageSizes: [
-       {
-         name: 'thumbnail',
-         width: 300,
-       },
-       {
-         name: 'square',
-         width: 500,
-         height: 500,
-       },
-       {
-         name: 'small',
-         width: 600,
-       },
-       {
-         name: 'medium',
-         width: 900,
-       },
-       {
-         name: 'large',
-         width: 1400,
-       },
-       {
-         name: 'xlarge',
-         width: 1920,
-       },
-       {
-         name: 'og',
-         width: 1200,
-         height: 630,
-         crop: 'center',
-       },
-     ],
-   },
- }
+// collections/Media.ts
+
+// Removed 'path' import as it's no longer used after removing staticDir
+// import path from 'path';
+import { CollectionConfig } from 'payload'; // Corrected import source
+
+export const Media: CollectionConfig = {
+  slug: 'media', // Ensure this matches the slug used in payload.config.ts plugins
+  admin: {
+    useAsTitle: 'filename',
+  },
+  access: {
+    read: () => true, // Adjust access control as needed for your application
+  },
+  upload: {
+    // --- REMOVED LOCAL/TMP STORAGE CONFIG ---
+    // staticDir: path.resolve('/tmp'), //  <--- REMOVED THIS LINE
+    // staticURL: '/media',             //  <--- REMOVED THIS LINE (or keep commented)
+    // The cloud storage plugin handles storage location now.
+    // --- End Removal ---
+
+    // Image processing settings remain relevant:
+    // Sharp (configured in payload.config.ts) will process these sizes
+    // before the plugin uploads them to Vercel Blob.
+    imageSizes: [
+      { name: 'thumbnail', width: 400, height: 300, position: 'centre' },
+      { name: 'card', width: 768, height: 1024, position: 'centre' },
+      { name: 'tablet', width: 1024, height: undefined, position: 'centre' },
+    ],
+    adminThumbnail: 'thumbnail', // Uses the 'thumbnail' size in the admin UI
+    mimeTypes: ['image/*', 'application/pdf'], // Allowed file types
+  },
+  fields: [ // Fields for metadata associated with the media
+    {
+      name: 'alt', // Alt text is crucial for accessibility
+      label: 'Alt Text',
+      type: 'text',
+      required: true,
+    },
+    // Add other fields if you need more metadata (e.g., caption)
+    // {
+    //   name: 'caption',
+    //   label: 'Caption',
+    //   type: 'text',
+    // }
+  ],
+};
