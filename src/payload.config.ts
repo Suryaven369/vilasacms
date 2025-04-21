@@ -68,7 +68,7 @@ export default buildConfig({
     },
   }),
   collections: [Pages, Posts, Media, Categories, Users , Services, Testimonials, Portfolio],
-  cors: [getServerSideURL(), 'http://localhost:3000'].filter(Boolean),
+  cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins: [
     ...plugins,
