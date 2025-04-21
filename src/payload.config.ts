@@ -1,18 +1,19 @@
+// payload.config.ts
+
 // Import necessary Payload modules and collections
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { buildConfig, PayloadRequest } from 'payload'; // PayloadRequest might not be directly needed here unless used elsewhere
+import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
-import sharp from 'sharp'; // sharp-import remains for local image processing
+import sharp from 'sharp';
 
-// ===== REMOVED CLOUD STORAGE IMPORTS =====
-// import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'; // No longer needed
-// import { s3Storage } from '@payloadcms/storage-s3'; // No longer needed
-// =========================================
+// ===== VERCEL BLOB STORAGE IMPORT =====
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob';
+// =====================================
 
 // Your Collections and Globals
 import { Categories } from './collections/Categories';
-import { Media } from './collections/Media'; // Ensure Media is imported correctly
+import { Media } from './collections/Media'; // Ensure Media collection slug is 'media' or update below
 import { Services } from './collections/Services';
 import { Testimonials } from './collections/Testimonials';
 import Portfolio from './collections/Portfolio';
@@ -23,64 +24,68 @@ import { Footer } from './Footer/config';
 import { Header } from './Header/config';
 
 // Your other imports and utilities
-import { plugins as otherPluginsFromExternalFile } from './plugins'; // Renamed variable
-import { defaultLexical } from '@/fields/defaultLexical';
-import { getServerSideURL } from './utilities/getURL';
+import { plugins as otherPluginsFromExternalFile } from './plugins'; // Example of external plugins
+import { defaultLexical } from '@/fields/defaultLexical'; // Example editor
+import { getServerSideURL } from './utilities/getURL'; // Ensure this utility is correct
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-// ===== REMOVED S3 STORAGE CONFIGURATION FOR SUPABASE =====
-// const s3Config = { ... }; // No longer needed
-// ======================================================
-
 export default buildConfig({
   admin: {
     components: {
-      beforeLogin: ['@/components/BeforeLogin'],
+      beforeLogin: ['@/components/BeforeLogin'], // Example custom components
       beforeDashboard: ['@/components/BeforeDashboard'],
     },
-    importMap: {
+    importMap: { // Example import map
       baseDir: path.resolve(dirname),
     },
-    user: Users.slug,
-    // livePreview: { /* ... */ }, // Ensure this is configured if needed
+    user: Users.slug, // Uses the 'users' collection for authentication
+    // livePreview: { /* ... */ }, // Configure if needed
   },
-  editor: defaultLexical,
-  db: postgresAdapter({
+  editor: defaultLexical, // Your rich text editor configuration
+  db: postgresAdapter({ // Database configuration
     pool: {
-      connectionString: process.env.DATABASE_URI, // Ensure this environment variable is set
+      connectionString: process.env.DATABASE_URI, // Ensure DATABASE_URI is set in .env
     },
   }),
-  collections: [
+  collections: [ // Your Payload collections
     Pages,
     Posts,
-    Media, // Media collection remains
+    Media, // Media collection using Vercel Blob
     Categories,
     Users,
     Services,
     Testimonials,
-    Portfolio
+    Portfolio,
   ],
-  cors: [getServerSideURL(), 'http://localhost:3000'].filter(Boolean),
-  globals: [Header, Footer],
-  plugins: [
-    // Include your other plugins
+  cors: [ // Configure Cross-Origin Resource Sharing
+     getServerSideURL(), // Get server URL dynamically
+     'http://localhost:3000', // Allow local frontend dev server (adjust port if needed)
+  ].filter(Boolean),
+  globals: [ // Your Payload globals
+    Header,
+    Footer,
+  ],
+  plugins: [ // Payload plugins
+    // Include your other plugins from the external file if any
     ...otherPluginsFromExternalFile,
 
-    // ===== REMOVED THE S3 STORAGE PLUGIN =====
-    // s3Storage({ ... }), // Removed this entire block
-    // ========================================
+    // ===== VERCEL BLOB STORAGE PLUGIN =====
+    vercelBlobStorage({
+      collections: {
+        [Media.slug]: true
+      },
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    }),
+    // ===============================================
   ],
-  secret: process.env.PAYLOAD_SECRET || 'fallback-secret-please-change', // Ensure a strong secret is set
-  sharp, // Keep sharp for local image processing
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'), // Example configuration
+  secret: process.env.PAYLOAD_SECRET || 'fallback-secret-for-dev-only', // IMPORTANT: Set a strong PAYLOAD_SECRET in .env
+  sharp, // Required for image processing
+  typescript: { // Generates TypeScript types for your config
+    outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  // graphQL: { // Add if needed
-  //   schemaOutputFile: path.resolve(dirname, 'generated-schema.graphql'),
-  // },
-  // jobs: { // Add if needed
-  //   tasks: [],
+  // jobs: { // Configure background jobs if needed
+  //  tasks: [],
   // },
 });
