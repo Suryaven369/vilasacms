@@ -1,47 +1,37 @@
-// collections/Media.ts
-
-// Removed 'path' import as it's no longer used after removing staticDir
-// import path from 'path';
-import { CollectionConfig } from 'payload'; // Corrected import source
+import path from 'path';
+import { CollectionConfig } from 'payload';
 
 export const Media: CollectionConfig = {
-  slug: 'media', // Ensure this matches the slug used in payload.config.ts plugins
+  slug: 'media',
   admin: {
     useAsTitle: 'filename',
   },
   access: {
-    read: () => true, // Adjust access control as needed for your application
+    read: () => true, // Adjust access control as needed
   },
   upload: {
-    // --- REMOVED LOCAL/TMP STORAGE CONFIG ---
-    // staticDir: path.resolve('/tmp'), //  <--- REMOVED THIS LINE
-    // staticURL: '/media',             //  <--- REMOVED THIS LINE (or keep commented)
-    // The cloud storage plugin handles storage location now.
-    // --- End Removal ---
+    // --- Vercel /tmp Configuration ---
+    staticDir: path.resolve('/tmp'), // Save files to Vercel's writable /tmp directory
+    // staticURL: '/media', // Keep the URL path the same if desired
+    // --- End Vercel Configuration ---
 
-    // Image processing settings remain relevant:
-    // Sharp (configured in payload.config.ts) will process these sizes
-    // before the plugin uploads them to Vercel Blob.
-    imageSizes: [
+    imageSizes: [ // Example image sizes using sharp
       { name: 'thumbnail', width: 400, height: 300, position: 'centre' },
       { name: 'card', width: 768, height: 1024, position: 'centre' },
       { name: 'tablet', width: 1024, height: undefined, position: 'centre' },
     ],
-    adminThumbnail: 'thumbnail', // Uses the 'thumbnail' size in the admin UI
-    mimeTypes: ['image/*', 'application/pdf'], // Allowed file types
+    adminThumbnail: 'thumbnail',
+    mimeTypes: ['image/*', 'application/pdf'], // Allow images and PDFs
   },
-  fields: [ // Fields for metadata associated with the media
+  fields: [
     {
-      name: 'alt', // Alt text is crucial for accessibility
-      label: 'Alt Text',
+      name: 'alt',
       type: 'text',
       required: true,
     },
-    // Add other fields if you need more metadata (e.g., caption)
-    // {
-    //   name: 'caption',
-    //   label: 'Caption',
-    //   type: 'text',
-    // }
+    // Add other fields if needed
   ],
 };
+
+// Ensure 'path' is imported at the top:
+// import path from 'path';
