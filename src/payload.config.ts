@@ -1,36 +1,36 @@
 // storage-adapter-import-placeholder
-import { postgresAdapter } from '@payloadcms/db-postgres';
+import { postgresAdapter } from '@payloadcms/db-postgres'
 
-import sharp from 'sharp'; // sharp-import
-import path from 'path';
-import { buildConfig, PayloadRequest } from 'payload';
-import { fileURLToPath } from 'url';
+import sharp from 'sharp' // sharp-import
+import path from 'path'
+import { buildConfig, PayloadRequest } from 'payload'
+import { fileURLToPath } from 'url'
 
-import { Categories } from './collections/Categories';
-import { Media } from './collections/Media';
-import { Services } from './collections/Services';
-import { Testimonials } from './collections/Testimonials';
-import { Portfolio } from './collections/Portfolio';
-import { Pages } from './collections/Pages';
-import { Posts } from './collections/Posts';
-import { Users } from './collections/Users';
-import { Footer } from './Footer/config';
-import { Header } from './Header/config';
-import { plugins } from './plugins';
-import { defaultLexical } from '@/fields/defaultLexical';
-import { getServerSideURL } from './utilities/getURL';
+import { Categories } from './collections/Categories'
+import { Media } from './collections/Media'
+import { Services } from './collections/Services'
+import { Testimonials } from './collections/Testimonials'
+import Portfolio from './collections/Portfolio'
+import { Pages } from './collections/Pages'
+import { Posts } from './collections/Posts'
+import { Users } from './collections/Users'
+import { Footer } from './Footer/config'
+import { Header } from './Header/config'
+import { plugins } from './plugins'
+import { defaultLexical } from '@/fields/defaultLexical'
+import { getServerSideURL } from './utilities/getURL'
 
-// Import cloud storage plugin and S3 adapter
-import { cloudStorage } from '@payloadcms/plugin-cloud-storage';
-import { s3Adapter } from '@payloadcms/plugin-cloud-storage/s3';
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
+const filename = fileURLToPath(import.meta.url)
+const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
     components: {
+      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
+      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
       beforeLogin: ['@/components/BeforeLogin'],
+      // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
+      // Feel free to delete this at any time. Simply remove the line below and the import `BeforeDashboard` statement on line 15.
       beforeDashboard: ['@/components/BeforeDashboard'],
     },
     importMap: {
@@ -60,37 +60,35 @@ export default buildConfig({
       ],
     },
   },
+  // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Services, Testimonials, Portfolio],
+  collections: [Pages, Posts, Media, Categories, Users , Services, Testimonials, Portfolio],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins: [
-    ...plugins,
-    // storage-adapter-placeholder
-    cloudStorage({
+    s3Storage({
       collections: {
         media: {
-          adapter: s3Adapter({
-            config: {
-              endpoint: process.env.S3_ENDPOINT,
-              region: process.env.S3_REGION,
-              forcePathStyle: true, // Important for S3-compatible services like Supabase
-              credentials: {
-                accessKeyId: process.env.S3_ACCESS_KEY_ID,
-                secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-              },
-            },
-            bucket: process.env.S3_BUCKET,
-          }),
-          prefix: 'media/', // Optional: specify a folder within the bucket
+          prefix: 'media',
+        }
+      },
+      bucket: process.env.S3_BUCKET,
+      config: {
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
         },
+        region: process.env.S3_REGION,
+        endpoint: process.env.S3_ENDPOINT,
       },
     }),
+    // storage-adapter-placeholder
   ],
   secret: process.env.PAYLOAD_SECRET,
   sharp,
@@ -100,11 +98,16 @@ export default buildConfig({
   jobs: {
     access: {
       run: ({ req }: { req: PayloadRequest }): boolean => {
-        if (req.user) return true;
-        const authHeader = req.headers.get('authorization');
-        return authHeader === `Bearer ${process.env.CRON_SECRET}`;
+        // Allow logged in users to execute this endpoint (default)
+        if (req.user) return true
+
+        // If there is no logged in user, then check
+        // for the Vercel Cron secret to be present as an
+        // Authorization header:
+        const authHeader = req.headers.get('authorization')
+        return authHeader === `Bearer ${process.env.CRON_SECRET}`
       },
     },
     tasks: [],
   },
-});
+})
