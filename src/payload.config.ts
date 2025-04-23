@@ -27,6 +27,11 @@ import { s3Storage } from '@payloadcms/storage-s3'
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+const S3Bucket = process.env.S3_BUCKET;
+if (!S3Bucket) {
+  throw new Error("Required environment variable S3_BUCKET is missing.");
+}
+
 export default buildConfig({
   admin: {
     components: {
@@ -78,7 +83,7 @@ export default buildConfig({
           prefix: 'media',
         }
       },
-      bucket: process.env.S3_BUCKET,
+      bucket: S3Bucket,,
       config: {
         forcePathStyle: true,
         credentials: {
