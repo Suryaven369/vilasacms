@@ -27,10 +27,32 @@ import { s3Storage } from '@payloadcms/storage-s3'
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+// --- Add checks for ALL required S3 variables ---
 const S3Bucket = process.env.S3_BUCKET;
+const S3AccessKeyId = process.env.S3_ACCESS_KEY_ID;
+const S3SecretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+const S3Region = process.env.S3_REGION;
+const S3Endpoint = process.env.S3_ENDPOINT; // Keep this if you use a custom endpoint
+
+// Validate required variables
 if (!S3Bucket) {
   throw new Error("Required environment variable S3_BUCKET is missing.");
 }
+if (!S3AccessKeyId) {
+  throw new Error("Required environment variable S3_ACCESS_KEY_ID is missing.");
+}
+if (!S3SecretAccessKey) {
+  throw new Error("Required environment variable S3_SECRET_ACCESS_KEY is missing.");
+}
+if (!S3Region) {
+  throw new Error("Required environment variable S3_REGION is missing.");
+}
+// Add this check if you require a custom endpoint (like MinIO, etc.)
+// if (!s3Endpoint) {
+//   throw new Error("Required environment variable S3_ENDPOINT is missing.");
+// }
+// --- End of checks ---
+
 
 export default buildConfig({
   admin: {
@@ -83,15 +105,18 @@ export default buildConfig({
           prefix: 'media',
         }
       },
-      bucket: S3Bucket,
+      bucket: S3Bucket, // Use validated variable
       config: {
-        forcePathStyle: true,
+        forcePathStyle: true, // Example property
         credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+          // Use validated variables here
+          accessKeyId: S3AccessKeyId,
+          secretAccessKey: S3SecretAccessKey,
         },
-        region: process.env.S3_REGION,
-        endpoint: process.env.S3_ENDPOINT,
+        // Use validated variable here
+        region: S3Region,
+        // Use validated variable here (if needed)
+        endpoint: S3Endpoint,
       },
     }),
   ],
