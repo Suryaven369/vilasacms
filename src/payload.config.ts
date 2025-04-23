@@ -83,7 +83,7 @@ export default buildConfig({
           prefix: 'media',
         }
       },
-      bucket: S3Bucket,,
+      bucket: S3Bucket,
       config: {
         forcePathStyle: true,
         credentials: {
