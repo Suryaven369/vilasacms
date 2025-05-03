@@ -94,7 +94,7 @@ export default buildConfig({
     },
   }),
   collections: [Pages, Posts, Media, Categories, Users, Services, Testimonials, Portfolio],
-  cors: [https://www.viilasa.com, https://viilasasite.vercel.app],
+  cors: ["https://www.viilasa.com", "https://viilasasite.vercel.app"],
   globals: [Header, Footer],
   plugins: [
     ...plugins,
